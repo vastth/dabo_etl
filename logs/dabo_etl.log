@@ -1,0 +1,124 @@
+2026-02-04 09:35:47,768 | INFO | Watcher running
+2026-02-04 09:36:17,785 | INFO | Watcher heartbeat
+2026-02-04 09:36:47,789 | INFO | Watcher heartbeat
+2026-02-04 09:37:17,793 | INFO | Watcher heartbeat
+2026-02-04 09:37:47,797 | INFO | Watcher heartbeat
+2026-02-04 09:38:17,800 | INFO | Watcher heartbeat
+2026-02-04 09:38:47,803 | INFO | Watcher heartbeat
+2026-02-04 09:39:17,807 | INFO | Watcher heartbeat
+2026-02-04 09:39:47,810 | INFO | Watcher heartbeat
+2026-02-04 09:40:17,814 | INFO | Watcher heartbeat
+2026-02-04 09:40:47,818 | INFO | Watcher heartbeat
+2026-02-04 09:41:17,821 | INFO | Watcher heartbeat
+2026-02-04 09:41:47,824 | INFO | Watcher heartbeat
+2026-02-04 09:42:17,828 | INFO | Watcher heartbeat
+2026-02-04 09:42:47,832 | INFO | Watcher heartbeat
+2026-02-04 09:43:17,835 | INFO | Watcher heartbeat
+2026-02-04 09:43:47,838 | INFO | Watcher heartbeat
+2026-02-04 09:44:17,842 | INFO | Watcher heartbeat
+2026-02-04 09:44:28,375 | INFO | Detected new CSV: \\192.168.0.151\hefang总部\14-数据中台\达播数据同步\例行\dabo_20260204.csv
+2026-02-04 09:44:47,845 | INFO | Watcher heartbeat
+2026-02-04 09:45:17,848 | INFO | Watcher heartbeat
+2026-02-04 09:45:47,852 | INFO | Watcher heartbeat
+2026-02-04 09:46:17,859 | INFO | Watcher heartbeat
+2026-02-04 09:46:47,867 | INFO | Watcher heartbeat
+2026-02-04 09:46:54,874 | INFO | Stopping watcher...
+2026-02-04 09:47:25,220 | INFO | Startup scan found CSV: \\192.168.0.151\hefang总部\14-数据中台\达播数据同步\例行\dabo_20260204.csv
+2026-02-04 09:47:26,906 | ERROR | Failed processing: \\192.168.0.151\hefang总部\14-数据中台\达播数据同步\例行\dabo_20260204.csv
+Traceback (most recent call last):
+  File "C:\Users\tianhao\PycharmProjects\dabo_etl\src\file_watcher.py", line 106, in process_file
+    df_valid, meta = self.etl.process_file(file_path)
+                     ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\tianhao\PycharmProjects\dabo_etl\src\etl_processor.py", line 115, in process_file
+    df_clean = self.clean_and_filter(df_raw)
+  File "C:\Users\tianhao\PycharmProjects\dabo_etl\src\etl_processor.py", line 50, in clean_and_filter
+    self._validate_strict(df)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^
+  File "C:\Users\tianhao\PycharmProjects\dabo_etl\src\etl_processor.py", line 81, in _validate_strict
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Invalid data types: qty=0, revenue=1599, ship_time=0
+2026-02-04 09:47:26,931 | INFO | Moved to quarantine: \\192.168.0.151\hefang总部\14-数据中台\达播数据同步\隔离\dabo_data_20260204_094726_error.csv
+2026-02-04 09:47:27,643 | INFO | Watcher running
+2026-02-04 09:47:57,649 | INFO | Watcher heartbeat
+2026-02-04 09:48:27,655 | INFO | Watcher heartbeat
+2026-02-04 09:48:31,124 | INFO | Stopping watcher...
+2026-02-04 09:48:52,315 | INFO | Watcher running
+2026-02-04 09:49:22,319 | INFO | Watcher heartbeat
+2026-02-04 09:49:43,473 | INFO | Detected new CSV: \\192.168.0.151\hefang总部\14-数据中台\达播数据同步\例行\dabo_20260204.csv
+2026-02-04 09:49:47,545 | INFO | Processed CSV: \\192.168.0.151\hefang总部\14-数据中台\达播数据同步\例行\dabo_20260204.csv, inserted: 536
+2026-02-04 09:49:47,577 | INFO | Moved to processed: \\192.168.0.151\hefang总部\14-数据中台\达播数据同步\已处理\dabo_data_20260204_094947.csv
+2026-02-04 09:49:47,635 | INFO | Detected new CSV: \\192.168.0.151\hefang总部\14-数据中台\达播数据同步\例行\dabo_20260204.csv
+2026-02-04 09:49:52,324 | INFO | Watcher heartbeat
+2026-02-04 09:49:57,650 | ERROR | File not ready after retries: \\192.168.0.151\hefang总部\14-数据中台\达播数据同步\例行\dabo_20260204.csv
+2026-02-04 09:50:22,329 | INFO | Watcher heartbeat
+2026-02-04 09:50:52,334 | INFO | Watcher heartbeat
+2026-02-04 09:51:17,946 | INFO | Stopping watcher...
+2026-02-04 09:51:31,580 | INFO | Watcher running
+2026-02-04 09:51:37,780 | INFO | Detected new CSV: \\192.168.0.151\hefang总部\14-数据中台\达播数据同步\例行\dabo_20260204.csv
+2026-02-04 09:51:39,067 | WARNING | Skipped duplicate file: \\192.168.0.151\hefang总部\14-数据中台\达播数据同步\例行\dabo_20260204.csv
+2026-02-04 09:51:39,084 | INFO | Moved to processed: \\192.168.0.151\hefang总部\14-数据中台\达播数据同步\已处理\dabo_data_20260204_095139.csv
+2026-02-04 09:51:39,228 | INFO | Detected new CSV: \\192.168.0.151\hefang总部\14-数据中台\达播数据同步\例行\dabo_20260204.csv
+2026-02-04 09:51:49,244 | INFO | File disappeared before processing: \\192.168.0.151\hefang总部\14-数据中台\达播数据同步\例行\dabo_20260204.csv
+2026-02-04 09:52:01,584 | INFO | Watcher heartbeat
+2026-02-04 09:52:31,588 | INFO | Watcher heartbeat
+2026-02-04 09:53:01,591 | INFO | Watcher heartbeat
+2026-02-04 09:53:31,595 | INFO | Watcher heartbeat
+2026-02-04 09:54:01,599 | INFO | Watcher heartbeat
+2026-02-04 09:54:31,604 | INFO | Watcher heartbeat
+2026-02-04 09:55:01,609 | INFO | Watcher heartbeat
+2026-02-04 09:55:31,612 | INFO | Watcher heartbeat
+2026-02-04 09:56:01,616 | INFO | Watcher heartbeat
+2026-02-04 09:56:31,619 | INFO | Watcher heartbeat
+2026-02-04 09:56:53,104 | INFO | Stopping watcher...
+2026-02-04 10:06:00,766 | INFO | Watcher running
+2026-02-04 10:06:23,608 | INFO | Detected new CSV: \\192.168.0.151\hefang总部\14-数据中台\达播数据同步\紧急\dabo_20260204.csv
+2026-02-04 10:06:24,896 | WARNING | Skipped duplicate file: \\192.168.0.151\hefang总部\14-数据中台\达播数据同步\紧急\dabo_20260204.csv
+2026-02-04 10:06:24,927 | INFO | Moved to processed: \\192.168.0.151\hefang总部\14-数据中台\达播数据同步\已处理\dabo_data_20260204_100624.csv
+2026-02-04 10:06:24,998 | INFO | Detected new CSV: \\192.168.0.151\hefang总部\14-数据中台\达播数据同步\紧急\dabo_20260204.csv
+2026-02-04 10:06:30,772 | INFO | Watcher heartbeat
+2026-02-04 10:06:35,016 | INFO | File disappeared before processing: \\192.168.0.151\hefang总部\14-数据中台\达播数据同步\紧急\dabo_20260204.csv
+2026-02-04 10:07:00,777 | INFO | Watcher heartbeat
+2026-02-04 10:07:17,182 | INFO | Detected new CSV: \\192.168.0.151\hefang总部\14-数据中台\达播数据同步\例行\dabo_20260204.csv
+2026-02-04 10:07:20,659 | INFO | Processed CSV: \\192.168.0.151\hefang总部\14-数据中台\达播数据同步\例行\dabo_20260204.csv, inserted: 536, duration_ms=2468, file_size=17394016, retries=0
+2026-02-04 10:07:20,675 | INFO | Moved to processed: \\192.168.0.151\hefang总部\14-数据中台\达播数据同步\已处理\dabo_data_20260204_100720.csv
+2026-02-04 10:07:20,720 | INFO | Detected new CSV: \\192.168.0.151\hefang总部\14-数据中台\达播数据同步\例行\dabo_20260204.csv
+2026-02-04 10:07:30,733 | INFO | File disappeared before processing: \\192.168.0.151\hefang总部\14-数据中台\达播数据同步\例行\dabo_20260204.csv
+2026-02-04 10:07:30,782 | INFO | Watcher heartbeat
+2026-02-04 10:08:00,786 | INFO | Watcher heartbeat
+2026-02-04 10:08:30,791 | INFO | Watcher heartbeat
+2026-02-04 10:09:00,795 | INFO | Watcher heartbeat
+2026-02-04 10:09:30,799 | INFO | Watcher heartbeat
+2026-02-04 10:10:00,803 | INFO | Watcher heartbeat
+2026-02-04 10:10:30,807 | INFO | Watcher heartbeat
+2026-02-04 10:11:00,812 | INFO | Watcher heartbeat
+2026-02-04 10:11:30,815 | INFO | Watcher heartbeat
+2026-02-04 10:12:00,820 | INFO | Watcher heartbeat
+2026-02-04 10:12:30,823 | INFO | Watcher heartbeat
+2026-02-04 10:13:00,826 | INFO | Watcher heartbeat
+2026-02-04 10:13:30,831 | INFO | Watcher heartbeat
+2026-02-04 10:14:00,834 | INFO | Watcher heartbeat
+2026-02-04 10:14:30,837 | INFO | Watcher heartbeat
+2026-02-04 10:15:00,841 | INFO | Watcher heartbeat
+2026-02-04 10:15:30,844 | INFO | Watcher heartbeat
+2026-02-04 10:16:00,848 | INFO | Watcher heartbeat
+2026-02-04 10:16:30,851 | INFO | Watcher heartbeat
+2026-02-04 10:17:00,855 | INFO | Watcher heartbeat
+2026-02-04 10:17:30,858 | INFO | Watcher heartbeat
+2026-02-04 10:18:00,862 | INFO | Watcher heartbeat
+2026-02-04 10:18:30,865 | INFO | Watcher heartbeat
+2026-02-04 10:19:00,868 | INFO | Watcher heartbeat
+2026-02-04 10:19:30,871 | INFO | Watcher heartbeat
+2026-02-04 10:20:00,875 | INFO | Watcher heartbeat
+2026-02-04 10:20:30,883 | INFO | Watcher heartbeat
+2026-02-04 10:21:00,891 | INFO | Watcher heartbeat
+2026-02-04 10:21:30,899 | INFO | Watcher heartbeat
+2026-02-04 10:22:00,905 | INFO | Watcher heartbeat
+2026-02-04 10:22:30,911 | INFO | Watcher heartbeat
+2026-02-04 10:23:00,918 | INFO | Watcher heartbeat
+2026-02-04 10:23:30,924 | INFO | Watcher heartbeat
+2026-02-04 10:24:00,928 | INFO | Watcher heartbeat
+2026-02-04 10:24:30,933 | INFO | Watcher heartbeat
+2026-02-04 10:25:00,938 | INFO | Watcher heartbeat
+2026-02-04 10:25:22,614 | INFO | Stopping watcher...

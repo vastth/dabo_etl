@@ -1,0 +1,37 @@
+nas:
+  routine_update_path: \\192.168.0.151\hefang总部\14-数据中台\达播数据同步\例行
+  urgent_update_path: \\192.168.0.151\hefang总部\14-数据中台\达播数据同步\紧急
+  processed_path: \\192.168.0.151\hefang总部\14-数据中台\达播数据同步\已处理
+  quarantine_path: \\192.168.0.151\hefang总部\14-数据中台\达播数据同步\隔离
+
+mysql:
+  host_env: MYSQL_HOST
+  port_env: MYSQL_PORT
+  user_env: MYSQL_USER
+  password_env: MYSQL_PASSWORD
+  database_env: MYSQL_DB
+  charset_env: MYSQL_CHARSET
+  charset: utf8mb4
+  host_default: 127.0.0.1
+  port_default: 3306
+
+oracle:
+  host_env: ORACLE_HOST
+  port_env: ORACLE_PORT
+  service_env: ORACLE_SERVICE
+  user_env: ORACLE_USER
+  password_env: ORACLE_PASSWORD
+  dsn_env: ORACLE_DSN
+
+etl:
+  order_status_allowlist:
+    - 已完成
+    - 已发货
+  sku_match_threshold: 0.95
+  delete_days: 60
+  retry_count: 3
+  retry_delay_seconds: 5
+
+logging:
+  level: INFO
+  log_dir: logs

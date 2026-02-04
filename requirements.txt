@@ -1,0 +1,6 @@
+pandas
+SQLAlchemy
+pymysql
+oracledb
+PyYAML
+watchdog
