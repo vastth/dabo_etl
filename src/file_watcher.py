@@ -1,3 +1,19 @@
+"""
+文件监听与 CSV 处理模块。
+
+职责：
+- 监听 NAS（或本地目录）中新到的 CSV 文件；
+- 对新文件做基本校验（文件名、就绪状态、hash 去重）；
+- 将文件交给 `EtlProcessor` 清洗/聚合并写入数据库；
+- 根据处理结果将文件移动到 `processed` 或 `quarantine` 目录，并记录导入日志。
+
+设计与运行要点：
+- 使用 watchdog 外挂监听文件创建事件，并在启动时对 watch 目录做一次扫描以处理启动前遗留的文件；
+- 使用 `_in_progress` 集合进行事件去抖，避免同一文件被并发事件触发两次处理；
+- 使用文件 hash 存储（temp/file_hashes.json）避免重复内容的再次导入；
+- 在遇到无法解析或处理的异常时，将文件移动到隔离目录并记录失败原因，便于人工排查。
+"""
+
 from __future__ import annotations
 
 import hashlib
@@ -21,12 +37,24 @@ from .logger import get_logger
 
 @dataclass
 class WatcherConfig:
+    """简单的配置数据类（当前未大量使用，但保留以便将来扩展）。"""
     watch_paths: List[str]
     processed_path: str
     poll_interval: float = 1.0
 
 
 class CsvHandler(FileSystemEventHandler):
+    """处理 CSV 文件创建事件的 Handler。
+
+    主要成员说明：
+        - `config`: 完整配置字典；
+        - `logger`: 日志记录器；
+        - `db`: `DatabaseHandler` 实例用于写库与查询 SKU；
+        - `etl`: `EtlProcessor` 实例用于清洗/聚合；
+        - `hash_store_path`: 本地存储已处理文件 hash 的 JSON 文件路径；
+        - `_in_progress`: 内存集合用于去抖正在处理的文件路径，避免重复处理。
+    """
+
     def __init__(self, config: Dict[str, Any]) -> None:
         super().__init__()
         self.config = config
@@ -40,6 +68,7 @@ class CsvHandler(FileSystemEventHandler):
         return path.lower().endswith(".csv")
 
     def _is_valid_filename(self, file_path: str) -> bool:
+        """校验文件名是否符合 `dabo_YYYYMMDD.csv` 的约定并验证日期段是否合法。"""
         name = os.path.basename(file_path)
         if not re.match(r"^dabo_\d{8}\.csv$", name):
             return False
@@ -50,6 +79,14 @@ class CsvHandler(FileSystemEventHandler):
         return True
 
     def on_created(self, event) -> None:
+        """watchdog 的回调：当文件在监控目录被创建时触发。
+
+        流程：
+            - 忽略目录事件与非 CSV 文件；
+            - 使用 `_in_progress` 去抖；
+            - 等待文件可读后交由 `process_file` 处理；
+            - 不管成功或失败，最后从 `_in_progress` 中移除路径。
+        """
         if event.is_directory:
             return
 
@@ -75,6 +112,10 @@ class CsvHandler(FileSystemEventHandler):
             self._in_progress.discard(file_path)
 
     def process_file(self, file_path: str) -> None:
+        """处理单个文件的主流程：校验文件名 → 就绪检查 → hash 去重 → ETL → 写库 → 移动文件与记录日志。
+
+        在出错情况下，会将文件移动到隔离目录（quarantine）并记录失败原因，便于人工排查与重试。
+        """
         started_at = datetime.now()
         file_size = None
         if os.path.exists(file_path):
@@ -92,6 +133,7 @@ class CsvHandler(FileSystemEventHandler):
             "records_inserted": 0,
         }
 
+        # 文件名校验
         if not self._is_valid_filename(file_path):
             log_data["status"] = "REJECTED_NAME"
             log_data["message"] = "Invalid file name"
@@ -101,6 +143,7 @@ class CsvHandler(FileSystemEventHandler):
             self._safe_log_import(log_data)
             return
 
+        # 再次就绪检查（因为 on_created 可能仅表示文件创建，未写入完毕）
         if not self._wait_for_ready(file_path):
             if not os.path.exists(file_path):
                 log_data["status"] = "SKIPPED_MISSING"
@@ -118,16 +161,19 @@ class CsvHandler(FileSystemEventHandler):
             self._safe_log_import(log_data)
             return
 
+        # 内容去重：根据文件内容 hash 跳过重复内容的文件
         file_hash = self._compute_hash(file_path)
         if self._is_duplicate_hash(file_hash):
             log_data["status"] = "SKIPPED_DUPLICATE"
             log_data["message"] = "Duplicate file hash"
             log_data["finished_at"] = datetime.now()
             self.logger.warning("Skipped duplicate file: %s", file_path)
+            # 已处理但内容重复的文件也移动到 processed，避免重复堆积
             self._move_to_processed(file_path)
             self._safe_log_import(log_data)
             return
 
+        # 重试配置（ETL 内部或文件 IO 异常可触发重试）
         retry_cfg = self.config.get("etl", {})
         max_retries = int(retry_cfg.get("retry_count", 0))
         delay = float(retry_cfg.get("retry_delay_seconds", 1))
@@ -135,12 +181,15 @@ class CsvHandler(FileSystemEventHandler):
         attempt = 0
         while True:
             try:
+                # 执行 ETL，获得最终写库的 DataFrame 与元信息
                 df_valid, meta = self.etl.process_file(file_path)
                 log_data.update(meta)
 
+                # 删除历史数据（按配置保留天数）以避免重复聚合导致错计
                 delete_days = int(self.config.get("etl", {}).get("delete_days", 60))
                 self.db.delete_recent_data(delete_days)
 
+                # 写库：DatabaseHandler 内部使用事务与 UPSERT 保证幂等
                 inserted = self.db.insert_dabo_data(df_valid, file_path)
                 log_data["records_inserted"] = inserted
                 log_data["status"] = "SUCCESS"
@@ -160,6 +209,7 @@ class CsvHandler(FileSystemEventHandler):
                 self._save_hash(file_hash)
                 break
             except (PermissionError, OSError, IOError) as exc:
+                # 针对文件被锁或网络文件系统 IO 错误做重试与退避
                 if attempt < max_retries:
                     attempt += 1
                     self.logger.warning(
@@ -173,6 +223,7 @@ class CsvHandler(FileSystemEventHandler):
                 self._move_to_quarantine(file_path, suffix="error")
                 break
             except Exception as exc:  # noqa: BLE001
+                # 其他错误（例如数据验证失败）直接隔离并记录
                 log_data["message"] = str(exc)
                 log_data["finished_at"] = datetime.now()
                 self.logger.exception("Failed processing: %s", file_path)
@@ -181,12 +232,14 @@ class CsvHandler(FileSystemEventHandler):
         self._safe_log_import(log_data)
 
     def _safe_log_import(self, log_data: Dict[str, Any]) -> None:
+        """尝试写入导入日志；若写日志失败只记录异常，不影响主流程（防止二次错误破坏文件流）。"""
         try:
             self.db.log_import_record(log_data)
         except Exception:  # noqa: BLE001
             self.logger.exception("Failed to write import log")
 
     def _compute_hash(self, file_path: str) -> str:
+        """按文件内容计算 SHA256，用于去重判断。以流式方式读取文件以节省内存。"""
         sha256 = hashlib.sha256()
         with open(file_path, "rb") as f:
             for chunk in iter(lambda: f.read(1024 * 1024), b""):
@@ -194,6 +247,11 @@ class CsvHandler(FileSystemEventHandler):
         return sha256.hexdigest()
 
     def _wait_for_ready(self, file_path: str, retries: int = 10, delay: float = 1.0) -> bool:
+        """等待文件可读（非被占用）并返回是否就绪。
+
+        在网络文件系统上，文件创建事件可能在写入尚未完成时触发，
+        本函数通过尝试以二进制模式打开文件来检测是否已释放写锁。
+        """
         for _ in range(retries):
             try:
                 with open(file_path, "rb"):
@@ -211,6 +269,7 @@ class CsvHandler(FileSystemEventHandler):
             with open(self.hash_store_path, "r", encoding="utf-8") as f:
                 return json.load(f) or {}
         except Exception:  # noqa: BLE001
+            # 读取失败（例如文件损坏）时返回空字典，避免处理流程中断
             return {}
 
     def _save_hash(self, file_hash: str) -> None:
@@ -227,6 +286,7 @@ class CsvHandler(FileSystemEventHandler):
         return file_hash in store
 
     def _move_to_quarantine(self, file_path: str, suffix: str) -> None:
+        """将文件移动到隔离目录，文件名后缀用于标识问题类型（如 bad_name/locked/error）。"""
         quarantine_dir = self.config.get("nas", {}).get("quarantine_path")
         if not quarantine_dir:
             return
@@ -253,6 +313,10 @@ class CsvHandler(FileSystemEventHandler):
 
 @dataclass
 class FileWatcher:
+    """启动并管理 watchdog observer 的帮助类。
+
+    使用 `start()` 启动 observer 并在启动后扫描已有文件以保证不漏处理。
+    """
     config: Dict[str, Any]
 
     def start(self) -> None:
@@ -278,6 +342,7 @@ class FileWatcher:
         self._run_loop(observer)
 
     def _scan_existing(self, handler: CsvHandler, watch_paths: List[str]) -> None:
+        """启动时扫描目录并处理已存在的 CSV 文件（防止启动期间遗漏）。"""
         logger = get_logger()
         for path in watch_paths:
             try:

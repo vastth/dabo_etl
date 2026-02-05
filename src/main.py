@@ -1,3 +1,15 @@
+"""
+主入口脚本。
+
+提供两种运行模式：
+    - `--watch`: 以守护/监听模式运行，持续监控 NAS 目录；
+    - `--file <path>`: 一次性处理指定 CSV，便于手动调试与回溯。
+
+配置加载优先级：
+    - 当通过 `--config` 指定路径时使用该 YAML；
+    - 否则使用项目默认位置 `config/config.yaml`。
+"""
+
 from __future__ import annotations
 
 import argparse
@@ -11,6 +23,15 @@ from .logger import get_logger
 
 
 def run_once(csv_path: str, config_path: str | None = None) -> None:
+    """以一次性运行模式处理单个 CSV 文件并记录导入日志。
+
+    适用于排查单个文件或手动回放。函数流程：
+        1. 加载配置并初始化 logger/db/etl；
+        2. 调用 `EtlProcessor.process_file` 执行清洗聚合并校验；
+        3. 删除历史数据（由配置驱动）；
+        4. 将结果写入 MySQL（`DatabaseHandler.insert_dabo_data`）；
+        5. 将导入元信息写入日志表 `log_dabo_import`。
+    """
     config = load_config(config_path) if config_path else load_default_config()
     logger = get_logger(log_dir=config.get("logging", {}).get("log_dir", "logs"))
 
