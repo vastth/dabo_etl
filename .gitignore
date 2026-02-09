@@ -1,0 +1,20 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+
+# Logs
+logs/
+*.log
+logs/*.log*
+
+# Temporary files and hashes
+temp/
+*.tmp
+
+# Editor/OS files
+.pytest_cache/
+.venv/
+env/
+*.swp
+Thumbs.db
+Desktop.ini
