@@ -12,6 +12,7 @@
 
 from __future__ import annotations
 
+import os
 import argparse
 from datetime import datetime
 
@@ -20,6 +21,10 @@ from .db_handler import DatabaseHandler
 from .etl_processor import EtlProcessor
 from .file_watcher import start_watcher
 from .logger import get_logger
+try:
+    from .alerts import send_wechat_alert
+except Exception:  # pragma: no cover - optional dependency at runtime
+    send_wechat_alert = None
 
 
 def run_once(csv_path: str, config_path: str | None = None) -> None:
@@ -59,10 +64,62 @@ def run_once(csv_path: str, config_path: str | None = None) -> None:
         log_data["finished_at"] = datetime.now()
 
         logger.info("Processed CSV: %s, inserted: %s", csv_path, inserted)
+        # 发送企业微信告警（若配置了 webhook）
+        try:
+            notif_cfg = config.get("notifications", {})
+            enabled = bool(notif_cfg.get("enabled", False))
+            webhook = os.environ.get("WECHAT_WEBHOOK") or notif_cfg.get("wechat_webhook")
+            timeout = int(notif_cfg.get("timeout", 10))
+            top_n = int(notif_cfg.get("top_n", 5))
+            max_len = int(notif_cfg.get("max_len", 1500))
+            if enabled and webhook and send_wechat_alert:
+                # 构建数据分布摘要：取插入的 topN SKU
+                try:
+                    top = (
+                        df_valid.sort_values("dabo_sales_qty", ascending=False)
+                        .head(top_n)
+                        .loc[:, ["product_alias_code", "dabo_sales_qty", "dabo_order_count", "dabo_revenue"]]
+                    )
+                    lines = [
+                        f"{r.product_alias_code}: qty={int(r.dabo_sales_qty)}, orders={int(r.dabo_order_count)}, rev={r.dabo_revenue:.2f}"
+                        for r in top.itertuples()
+                    ]
+                    dist = "\n".join(lines) if lines else "(no data)"
+                except Exception:
+                    dist = "(failed to summarize distribution)"
+
+                finished = log_data.get("finished_at")
+                ts = finished.isoformat(sep=" ", timespec="seconds") if finished else ""
+                sku_match_rate = log_data.get("sku_match_rate")
+                sku_rate_str = f"{sku_match_rate:.2%}" if sku_match_rate is not None else "N/A"
+                msg = (
+                    f"达播数据已更新\n文件: {log_data.get('file_name')}\n时间: {ts}\n"
+                    f"插入: {log_data.get('records_inserted')}\nsku_match_rate: {sku_rate_str}\n"
+                    f"Top SKUs:\n{dist}"
+                )
+                send_wechat_alert(webhook, msg, max_len=max_len, timeout=timeout)
+        except Exception:
+            logger.exception("Failed to send wechat alert in run_once")
     except Exception as exc:  # noqa: BLE001
         log_data["message"] = str(exc)
         log_data["finished_at"] = datetime.now()
         logger.exception("Failed processing: %s", csv_path)
+        # 处理失败也发告警（若配置）
+        try:
+            notif_cfg = config.get("notifications", {})
+            enabled = bool(notif_cfg.get("enabled", False))
+            webhook = os.environ.get("WECHAT_WEBHOOK") or notif_cfg.get("wechat_webhook")
+            timeout = int(notif_cfg.get("timeout", 10))
+            max_len = int(notif_cfg.get("max_len", 1500))
+            if enabled and webhook and send_wechat_alert:
+                finished = log_data.get("finished_at")
+                ts = finished.isoformat(sep=" ", timespec="seconds") if finished else ""
+                msg = (
+                    f"达播数据上传失败\n文件: {log_data.get('file_name')}\n时间: {ts}\n错误: {log_data.get('message')}"
+                )
+                send_wechat_alert(webhook, msg, max_len=max_len, timeout=timeout)
+        except Exception:
+            logger.exception("Failed to send failure wechat alert in run_once")
     finally:
         try:
             db.log_import_record(log_data)

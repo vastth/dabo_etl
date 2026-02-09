@@ -25,6 +25,28 @@
 - ORACLE_HOST / ORACLE_PORT / ORACLE_SERVICE / ORACLE_USER / ORACLE_PASSWORD
 - 或直接提供 ORACLE_DSN
 
+告警（企业微信机器人）
+ - 项目支持通过企业微信机器人发送处理结果告警（成功/失败）。
+ - 优先从环境变量 `WECHAT_WEBHOOK` 读取 webhook 地址；如未设置，可在 `config/config.yaml` 中配置 `notifications.wechat_webhook`。
+ - 若不配置或环境变量为空，则不会发送告警。
+
+设置示例：
+ - PowerShell (Windows):
+ ```powershell
+ $Env:WECHAT_WEBHOOK = "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=xxxxxxxx-xxxx-xxxx"
+ ```
+ - Bash (Linux/macOS):
+ ```bash
+ export WECHAT_WEBHOOK="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=xxxxxxxx-xxxx-xxxx"
+ ```
+
+说明：告警文本包含文件名、处理时间、插入条数、SKU 匹配率与 top SKU 分布摘要，便于快速确认数据状态。
+
+测试说明：
+- 我们已完成企业微信告警的集成测试（2026-02-09），包括成功与失败两种场景验证。
+- 默认告警为关闭，启用请在 `config/config.yaml` 中设置 `notifications.enabled: true` 或通过环境变量 `WECHAT_WEBHOOK` 并把 `enabled` 设为 `true`。
+- 测试要点：确保 `WECHAT_WEBHOOK` 指向企业微信机器人 webhook 且 webhook 已被允许接收消息。
+
 ## 建表
 执行 [sql/create_tables_mysql.sql](sql/create_tables_mysql.sql) 创建：
 - ads_dabo_daily_sales

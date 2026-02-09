@@ -4,3 +4,4 @@ pymysql
 oracledb
 PyYAML
 watchdog
+requests

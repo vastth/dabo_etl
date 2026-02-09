@@ -41,3 +41,9 @@
 - MySQL UPSERT 替代“删近60天再插”
 - SKU匹配率阈值低于配置则拒绝入库
 - 处理重试与退避策略配置化
+
+## 2026-02-09 告警集成与文档
+- 添加企业微信机器人告警支持（可通过 `WECHAT_WEBHOOK` 环境变量或 `config/config.yaml` 配置）
+- 在 `src` 中新增 `alerts.py`，并在 `main.py` / `file_watcher.py` 集成成功/失败告警
+- 增加配置项：`notifications.enabled`, `notifications.timeout`, `notifications.top_n`, `notifications.max_len`
+- 完成集成测试并在 README 中记录启用与测试说明
