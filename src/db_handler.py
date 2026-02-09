@@ -179,8 +179,10 @@ class DatabaseHandler:
         engine = self.get_mysql_engine()
         with engine.begin() as conn:
             # executemany: SQLAlchemy 将根据 records 批量执行，提高效率
+            # 注意：这里在单个事务内提交所有行，若中间发生异常事务会回滚，调用方应据此决定是否重试
             conn.execute(sql, records)
 
+        # 返回值采用输入记录数作为被影响的行数（便于上层与源文件行数做对账）
         return len(records)
 
     def get_valid_sku_set(self) -> Set[str]:
@@ -238,7 +240,9 @@ class DatabaseHandler:
             """
         )
 
+        # 将日志写入数据库：尽量保证此操作非阻塞调用路径（上层使用 _safe_log_import）
         engine = self.get_mysql_engine()
         with engine.begin() as conn:
             result = conn.execute(sql, payload)
+            # 通常返回 1，失败时会抛出异常，上层应捕获并记录以便审计
             return result.rowcount or 0

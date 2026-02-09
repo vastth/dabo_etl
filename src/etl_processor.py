@@ -207,6 +207,10 @@ class EtlProcessor:
         df_agg = self.aggregate(df_clean)
         df_valid, match_rate = self.validate_sku(df_agg)
 
+        # 元信息用于审计与报警：
+        # - `records_total`/`records_after_filter` 用于追踪清洗降损（数据丢弃比）；
+        # - `records_inserted` 用于核对写入量与源文件；
+        # - `sku_match_rate` 是安全阈值检查的核心指标，低于阈值会在上层触发人工介入。
         meta = {
             "file_name": os.path.basename(file_path),
             "file_path": file_path,
@@ -216,4 +220,5 @@ class EtlProcessor:
             "sku_match_rate": match_rate,
         }
 
+        # 返回：最终可写入数据库的 DataFrame（行已聚合且通过 SKU 过滤）和用于日志/告警的 meta
         return df_valid, meta

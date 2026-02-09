@@ -65,6 +65,7 @@ def run_once(csv_path: str, config_path: str | None = None) -> None:
 
         logger.info("Processed CSV: %s, inserted: %s", csv_path, inserted)
         # 发送企业微信告警（若配置了 webhook）
+        # 注意：告警配置支持环境变量覆盖（`WECHAT_WEBHOOK` 优先），以便在不同环境安全地注入密钥。
         try:
             notif_cfg = config.get("notifications", {})
             enabled = bool(notif_cfg.get("enabled", False))

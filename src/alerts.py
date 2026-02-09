@@ -87,3 +87,8 @@ def send_wechat_alert(
     else:
         logger.error('Wechat webhook returned error: errcode=%s, errmsg=%s, body=%s', errcode, errmsg, data)
         return False
+
+
+# 建议与改进：
+# - 当前实现为同步 HTTP 调用，会阻塞调用线程最多 `timeout` 秒。对于守护进程模式，建议把告警交给异步队列（如 Redis 列表或线程池）以避免影响主流程。
+# - 可在发送失败时实现有限重试与指数退避，或在高频告警场景下实现速率限制与聚合策略（例如把相近时间的同类告警合并）。

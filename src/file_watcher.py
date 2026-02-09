@@ -136,6 +136,10 @@ class CsvHandler(FileSystemEventHandler):
             "records_after_filter": 0,
             "records_inserted": 0,
         }
+        # log_data 字段说明（审计与排查用）：
+        # - started_at/finished_at: 用于计算处理时延并关联日志；
+        # - status: 标记处理结果，便于筛选失败/被拒绝的记录；
+        # - message: 可用于存放错误摘要或性能指标（例如 duration_ms）以便快速定位问题。
 
         # 文件名校验
         if not self._is_valid_filename(file_path):
@@ -351,6 +355,8 @@ class CsvHandler(FileSystemEventHandler):
         }
         with open(self.hash_store_path, "w", encoding="utf-8") as f:
             json.dump(store, f, ensure_ascii=False, indent=2)
+        # 持久化 hash 可用于避开重复导入，注意：该文件为简单 JSON 存储，
+        # 在高并发或分布式场景建议替换为外部共享的存储（如 Redis / 数据库）以避免竞态。
 
     def _is_duplicate_hash(self, file_hash: str) -> bool:
         store = self._load_hash_store()
