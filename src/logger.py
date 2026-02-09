@@ -117,3 +117,8 @@ def get_logger(
     logger.addHandler(console_handler)
 
     return logger
+
+# 使用建议（审计/运维）：
+# - 将日志保存到独立挂载的卷以防止磁盘占满影响程序运行；
+# - 若部署为多进程（如 gunicorn/workers）或多实例写同一文件，建议改为集中采集（Filebeat/Fluentd）或使用进程隔离的文件名模板；
+# - 对于短期调试可设置 `level='DEBUG'`，但生产环境请保持 INFO 级别并通过监控告警关注 ERROR/CRITICAL。

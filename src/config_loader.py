@@ -66,3 +66,11 @@ def load_default_config() -> Dict[str, Any]:
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     config_path = os.path.join(base_dir, "config", "config.yaml")
     return load_config(config_path)
+
+
+# 额外说明（供审计与调用方参考）：
+# - 本模块只负责将 YAML 解析为字典；若需要使用环境变量覆盖明文配置，建议调用方在加载后执行类似：
+#     cfg = load_default_config()
+#     cfg['mysql']['user'] = os.getenv(cfg['mysql'].get('user_env'), cfg['mysql'].get('user'))
+#   或者在 `DatabaseHandler` 中使用 `*_env` 字段（当前实现已在 `DatabaseHandler.get_mysql_engine` 中支持）。
+# - 在 CI 或容器化部署中，请通过 Secrets/环境变量注入敏感信息，而不是修改 `config/config.yaml`。
