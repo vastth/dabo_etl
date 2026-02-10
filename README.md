@@ -48,6 +48,8 @@
 - 默认告警为启用，配置项 `notifications.enabled` 默认为 `true`；若希望禁用，请将其设置为 `false`。
 - 你可以直接在 `config/config.yaml` 中设置 `notifications.wechat_webhook`，或通过环境变量 `WECHAT_WEBHOOK` 提供 webhook（环境变量优先）。
 - 测试要点：确保 `WECHAT_WEBHOOK` 指向企业微信机器人 webhook 且 webhook 已被允许接收消息。
+ - 注意：要实际发送告警，既需要将 `notifications.enabled` 设为 `true`，
+	 也需要通过环境变量 `WECHAT_WEBHOOK` 或在 `config/config.yaml` 的 `notifications.wechat_webhook` 中填写有效的 webhook URL。
 
 ## 建表
 执行 [sql/create_tables_mysql.sql](sql/create_tables_mysql.sql) 创建：
