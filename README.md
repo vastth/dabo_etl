@@ -44,7 +44,9 @@
 
 测试说明：
 - 我们已完成企业微信告警的集成测试（2026-02-09），包括成功与失败两种场景验证。
-- 默认告警为关闭，启用请在 `config/config.yaml` 中设置 `notifications.enabled: true` 或通过环境变量 `WECHAT_WEBHOOK` 并把 `enabled` 设为 `true`。
+- 我们已完成企业微信告警的集成测试（2026-02-09），包括成功与失败两种场景验证。
+- 默认告警为启用，配置项 `notifications.enabled` 默认为 `true`；若希望禁用，请将其设置为 `false`。
+- 你可以直接在 `config/config.yaml` 中设置 `notifications.wechat_webhook`，或通过环境变量 `WECHAT_WEBHOOK` 提供 webhook（环境变量优先）。
 - 测试要点：确保 `WECHAT_WEBHOOK` 指向企业微信机器人 webhook 且 webhook 已被允许接收消息。
 
 ## 建表
